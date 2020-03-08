@@ -26,13 +26,12 @@
 
 
 select datepart(month,[Delivery Date Key]) Month, datename(quarter,[Delivery Date Key]) Q
-, sum([Quantity]) [Sum of Qty],sum([Total Including Tax]) [$$$],
-
-  CASE
-WHEN MONTH(S.[Delivery Date Key]) > 8 THEN 3
-WHEN MONTH(S.[Delivery Date Key]) > 4 THEN 2
-ELSE 1
-END AS InvoiceThirdOfTheYear
+, sum([Quantity]) [Sum of Qty],sum([Total Including Tax]) [$$$]
+	,CASE
+		WHEN MONTH(S.[Delivery Date Key]) > 8 THEN 3
+		WHEN MONTH(S.[Delivery Date Key]) > 4 THEN 2
+	ELSE 1
+	END AS InvoiceThirdOfTheYear
   
   from [WideWorldImportersDW].[Fact].[Sale] S
   where [Delivery Date Key] is not null AND ([Quantity]>20 OR [Total Including Tax]>100)
@@ -43,18 +42,15 @@ END AS InvoiceThirdOfTheYear
 /**4. «аказы поставщикам, которые были исполнены за 2014й год с доставкой Road Freight или Post, 
 добавьте название поставщика, им€ контактного лица принимавшего заказ **/
 
-select PS.SupplierName,  T.FullName, O.*
+select PS.SupplierName,  P.FullName, O.*
   from [WideWorldImporters].[Purchasing].[PurchaseOrders] O
   join Application.DeliveryMethods D
   on D.DeliveryMethodID = O.DeliveryMethodID
   join Purchasing.Suppliers PS
   on PS.SupplierID = O.SupplierID
-  join
-  (select I.CustomerPurchaseOrderNumber, I.SalespersonPersonID, P.FullName, I.OrderID
-	from Sales.Invoices I join Application.People P
-	  on P.PersonID = I.SalespersonPersonID) T
-on
-  T.OrderID = O.PurchaseOrderID
+  join Application.People P
+  on P.PersonID = O.ContactPersonID
+  
   where year(OrderDate) = 2014 and D.DeliveryMethodName IN ('Road Freight','Post');
 
 
