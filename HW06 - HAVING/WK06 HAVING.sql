@@ -5,7 +5,6 @@ Select AVG(IL.UnitPrice) as 'Средняя цена товара'
 	, SUM(IL.[ExtendedPrice]) as 'Сумма продаж'
 	, Month(I.[InvoiceDate]) as 'Мес'
 	, year(I.[InvoiceDate]) as 'Год'
-
 FROM [WideWorldImporters].[Sales].[InvoiceLines] IL 
 	join [WideWorldImporters].[Sales].[Invoices] I
 	ON IL.InvoiceID= I.InvoiceID
@@ -19,7 +18,6 @@ Select AVG(IL.UnitPrice) as 'Средняя цена товара'
 	, SUM(IL.[ExtendedPrice]) as 'Сумма продаж'
 	, Month(I.[InvoiceDate]) as 'Мес'
 	, year(I.[InvoiceDate]) as 'Год'
-
 FROM [WideWorldImporters].[Sales].[InvoiceLines] IL 
 	join [WideWorldImporters].[Sales].[Invoices] I
 	ON IL.InvoiceID= I.InvoiceID
@@ -35,17 +33,16 @@ ORDER BY year(I.[InvoiceDate]), Month(I.[InvoiceDate]);
 
 Select  SUM(IL.[ExtendedPrice]) as 'Сумма продаж'
 		,MIN(I.[InvoiceDate]) as 'Первая продажа'
-		,COUNT(IL.[Quantity]) as 'Количество'
+		,SUM(IL.[Quantity]) as 'Количество'
 		,Month(I.[InvoiceDate]) as 'Мес'
 	    ,year(I.[InvoiceDate]) as 'Год'
 		,IL.StockItemID
-
 FROM [WideWorldImporters].[Sales].[InvoiceLines] IL 
 	join [WideWorldImporters].[Sales].[Invoices] I
 	ON IL.InvoiceID= I.InvoiceID
 GROUP BY IL.StockItemID, Month(I.[InvoiceDate]), year(I.[InvoiceDate])
 -- условие по группе
-HAVING COUNT(IL.[Quantity])<50
+HAVING SUM(IL.[Quantity])<50
 ORDER BY year(I.[InvoiceDate]), Month(I.[InvoiceDate]);
 
 
@@ -75,32 +72,26 @@ INSERT INTO dbo.MyEmployees VALUES
 ,(23, N'Mary', N'Gibson', N'Marketing Specialist', 4, 16);
 
 --РЕШЕНИЕ
+drop table if exists #t1;
 
 WITH CTE AS (
-SELECT EmployeeID, FirstName, LastName, Title, ManagerID
+SELECT EmployeeID, FirstName, LastName, Title, ManagerID,  1 AS EmployeeLevel --Уровень сотрудника
 FROM MyEmployees
 WHERE ManagerID IS NULL
 UNION ALL
-SELECT e.EmployeeID, e.FirstName, e.LastName, e.Title, e.ManagerID
+SELECT e.EmployeeID, e.FirstName, e.LastName, e.Title, e.ManagerID, EmployeeLevel + 1 
 FROM MyEmployees e
 INNER JOIN CTE ecte ON ecte.EmployeeID = e.ManagerID
 )
-SELECT * 
-FROM CTE
-
--- Создание временной таблицы
-CREATE TABLE #test 
-	(EmployeeID smallint NOT NULL,
-	FirstName nvarchar(30) NOT NULL,
-	LastName nvarchar(40) NOT NULL,
-	Title nvarchar(50) NOT NULL,
-	ManagerID int NULL,
-	);
--- Как вставить данные CTE во временную таблицу - не знаю ;( И номер в иерархии... это мне, увы, не дано ;(
-INSERT INTO #test 
-(EmployeeID, FirstName, LastName, Title, ManagerID)
-SELECT EmployeeID, FirstName, LastName, Title, ManagerID
+SELECT EmployeeID, FirstName, LastName, Title, EmployeeLevel
+--копирование во временную таблицу!
+into #t1
 FROM CTE;
+
+
+select * from #t1;
+
+
 
 
 /*
