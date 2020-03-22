@@ -25,6 +25,8 @@ CREATE TABLE IP_Master (id uniqueidentifier primary key default NEWID(),
 
 CREATE SEQUENCE NumberIP AS INT START WITH 1 INCREMENT BY 1;
 
+ALTER TABLE Capex.dbo.IP_Master ADD CONSTRAINT DateIP_chk CHECK (year([DateofIP])>2000);
+
 -- Таблица со списком предприятий
 CREATE TABLE Sites (SiteID int primary key, 
 					[Site] nvarchar(30) not null); 
