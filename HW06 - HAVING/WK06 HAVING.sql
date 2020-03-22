@@ -33,9 +33,26 @@ ORDER BY year(I.[InvoiceDate]), Month(I.[InvoiceDate]);
 по товарам, продажи которых менее 50 ед в месяц.
 Группировка должна быть по году и месяцу. **/
 
+Select  SUM(IL.[ExtendedPrice]) as 'Сумма продаж'
+		,MIN(I.[InvoiceDate]) as 'Первая продажа'
+		,COUNT(IL.[Quantity]) as 'Количество'
+		,Month(I.[InvoiceDate]) as 'Мес'
+	    ,year(I.[InvoiceDate]) as 'Год'
+		,IL.StockItemID
 
-4. Написать рекурсивный CTE sql запрос и заполнить им временную таблицу и табличную переменную
-Дано :
+FROM [WideWorldImporters].[Sales].[InvoiceLines] IL 
+	join [WideWorldImporters].[Sales].[Invoices] I
+	ON IL.InvoiceID= I.InvoiceID
+GROUP BY IL.StockItemID, Month(I.[InvoiceDate]), year(I.[InvoiceDate])
+-- условие по группе
+HAVING COUNT(IL.[Quantity])<50
+ORDER BY year(I.[InvoiceDate]), Month(I.[InvoiceDate]);
+
+
+
+--4. Написать рекурсивный CTE sql запрос и заполнить им временную таблицу и табличную переменную
+--Дано :
+
 CREATE TABLE dbo.MyEmployees
 (
 EmployeeID smallint NOT NULL,
@@ -57,6 +74,36 @@ INSERT INTO dbo.MyEmployees VALUES
 ,(16, N'David',N'Bradley', N'Marketing Manager', 4, 273)
 ,(23, N'Mary', N'Gibson', N'Marketing Specialist', 4, 16);
 
+--РЕШЕНИЕ
+
+WITH CTE AS (
+SELECT EmployeeID, FirstName, LastName, Title, ManagerID
+FROM MyEmployees
+WHERE ManagerID IS NULL
+UNION ALL
+SELECT e.EmployeeID, e.FirstName, e.LastName, e.Title, e.ManagerID
+FROM MyEmployees e
+INNER JOIN CTE ecte ON ecte.EmployeeID = e.ManagerID
+)
+SELECT * 
+FROM CTE
+
+-- Создание временной таблицы
+CREATE TABLE #test 
+	(EmployeeID smallint NOT NULL,
+	FirstName nvarchar(30) NOT NULL,
+	LastName nvarchar(40) NOT NULL,
+	Title nvarchar(50) NOT NULL,
+	ManagerID int NULL,
+	);
+-- Как вставить данные CTE во временную таблицу - не знаю ;( И номер в иерархии... это мне, увы, не дано ;(
+INSERT INTO #test 
+(EmployeeID, FirstName, LastName, Title, ManagerID)
+SELECT EmployeeID, FirstName, LastName, Title, ManagerID
+FROM CTE;
+
+
+/*
 Результат вывода рекурсивного CTE:
 EmployeeID Name Title EmployeeLevel
 1 Ken Sánchez Chief Executive Officer 1
