@@ -89,7 +89,19 @@ into #t1
 FROM CTE;
 
 
-select * from #t1;
+SELECT EmployeeID,
+	CASE 
+		WHEN  EmployeeLevel = 2 THEN CONCAT('| ',FirstName)
+		WHEN  EmployeeLevel = 3 THEN CONCAT('|| ',FirstName)
+		WHEN  EmployeeLevel = 4 THEN CONCAT('||| ',FirstName)
+	ELSE FirstName
+	END AS FirstName ,
+	 LastName, Title, EmployeeLevel
+FROM #t1;
+
+
+/*select EmployeeID, FirstName, LastName, Title, EmployeeLevel from #t1
+Group by  rollup (EmployeeID, FirstName, LastName, Title, EmployeeLevel);*/
 
 
 
